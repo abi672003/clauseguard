@@ -1,0 +1,25 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+
+# Derived data layer (regenerated locally from data/raw/ + models/, no
+# network needed)
+db/*.sqlite
+db/chroma/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Node (frontend)
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Jupyter
+.ipynb_checkpoints/
