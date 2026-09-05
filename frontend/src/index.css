@@ -1,0 +1,49 @@
+:root {
+  --paper: #f6f1e6;
+  --paper-edge: #e6dcc5;
+  --ink: #2b2620;
+  --ink-faint: #7a7160;
+  --rail: #223528;
+  --rail-dark: #16241a;
+  --seal-gold: #b8933d;
+
+  --entail: #2f6b47;
+  --entail-bg: #dcecdf;
+  --contradict: #96352b;
+  --contradict-bg: #f4dcd8;
+  --not-mentioned: #8a7a3f;
+  --not-mentioned-bg: #efe6c8;
+  --neutral-bg: #eae3d0;
+
+  font-family: "IBM Plex Sans", sans-serif;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--rail-dark);
+  color: var(--ink);
+}
+
+.mono {
+  font-family: "IBM Plex Mono", monospace;
+}
+
+.serif {
+  font-family: "Lora", serif;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
