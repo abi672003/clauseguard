@@ -1,0 +1,15 @@
+.venv/
+node_modules/
+frontend/node_modules/
+frontend/dist/
+data/raw/
+data/chroma/
+data/uploads/
+backend/models_cache/
+**/__pycache__/
+*.pyc
+.git/
+.github/
+*.sqlite3*
+.env
+.DS_Store

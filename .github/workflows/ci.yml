@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install CPU-only torch
+        run: pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Install dependencies
+        run: pip install -r backend/requirements-dev.txt
+
+      - name: Lint
+        run: ruff check backend/app backend/tests scripts
+
+      - name: Cache datasets
+        uses: actions/cache@v4
+        with:
+          path: data/raw
+          key: datasets-v1
+
+      - name: Download datasets
+        run: python scripts/download_data.py
+
+      - name: Cache checkpoints
+        uses: actions/cache@v4
+        with:
+          path: backend/models_cache
+          key: checkpoints-v1
+
+      - name: Download checkpoints
+        run: python scripts/download_models.py
+
+      - name: Run tests
+        working-directory: backend
+        env:
+          HF_HUB_OFFLINE: "1"
+          TOKENIZERS_PARALLELISM: "false"
+        run: python -m pytest -q
+
+  frontend:
+    name: Frontend build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - working-directory: frontend
+        run: npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+      - name: Typecheck
+        working-directory: frontend
+        run: npx tsc --noEmit
+      - name: Build
+        working-directory: frontend
+        run: npm run build
+
+  docker:
+    name: Docker image builds
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: [backend, frontend]
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: clauseguard:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

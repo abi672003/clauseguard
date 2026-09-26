@@ -1,0 +1,50 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# ---- Node / frontend ----
+node_modules/
+frontend/dist/
+frontend/.vite/
+*.local
+
+# ---- Secrets ----
+.env
+.env.*
+!.env.example
+
+# ---- Raw datasets (reproducible via scripts/download_data.py) ----
+data/raw/
+data/processed/*.jsonl
+data/chroma/
+!data/raw/.gitkeep
+
+# ---- Model weights are pulled from the HF hub at build time ----
+backend/models_cache/
+
+# ---- Runtime state ----
+# The database is regenerable (scripts/prepare_demo.py) and committing it would
+# ship a snapshot that silently goes stale against the code that produced it.
+*.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal
+*.sqlite3-journal
+*.log
+uploads/
+.DS_Store
+
+# ---- Fitted artefacts ARE committed (via Git LFS) ----
+# backend/artifacts/prototypes.npz     - the extractor's prototype bank
+# backend/artifacts/prototypes.json    - its provenance + held-out metrics
+# backend/artifacts/calibration.json   - the verifier's fitted threshold
+# backend/artifacts/cuad_splits.json   - the contract-level split assignment
+# They are the reproducible output of scripts/build_prototypes.py and
+# scripts/calibrate.py, and the app needs them to start.

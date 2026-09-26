@@ -1,0 +1,35 @@
+services:
+  clauseguard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: clauseguard:latest
+    container_name: clauseguard
+    ports:
+      - "7860:7860"
+    environment:
+      CLAUSEGUARD_ENV: prod
+      CLAUSEGUARD_DEVICE: cpu
+      # Optional: enables the Claude Haiku agent. Without it the deterministic
+      # policy engine runs and the product is fully functional.
+      CLAUSEGUARD_ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      CLAUSEGUARD_CORS_ORIGINS: "http://localhost:7860,http://localhost:5173"
+    volumes:
+      # Persist the database, vector store and uploads across restarts.
+      - clauseguard-data:/app/data
+      - clauseguard-artifacts:/app/backend/artifacts
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:7860/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+
+volumes:
+  clauseguard-data:
+  clauseguard-artifacts:

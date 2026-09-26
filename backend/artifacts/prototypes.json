@@ -1,0 +1,278 @@
+{
+  "encoder": "nlpaueb/legal-bert-base-uncased",
+  "method": "frozen-encoder nearest-centroid prototypes (no gradient updates)",
+  "dim": 768,
+  "n_prototypes": 202,
+  "categories": [
+    "Affiliate License-Licensee",
+    "Affiliate License-Licensor",
+    "Anti-Assignment",
+    "Audit Rights",
+    "Cap On Liability",
+    "Change Of Control",
+    "Competitive Restriction Exception",
+    "Covenant Not To Sue",
+    "Exclusivity",
+    "Expiration Date",
+    "Insurance",
+    "Ip Ownership Assignment",
+    "Irrevocable Or Perpetual License",
+    "Joint Ip Ownership",
+    "License Grant",
+    "Liquidated Damages",
+    "Minimum Commitment",
+    "Most Favored Nation",
+    "No-Solicit Of Customers",
+    "No-Solicit Of Employees",
+    "Non-Compete",
+    "Non-Disparagement",
+    "Non-Transferable License",
+    "Notice Period To Terminate Renewal",
+    "Post-Termination Services",
+    "Price Restrictions",
+    "Renewal Term",
+    "Revenue/Profit Sharing",
+    "Rofr/Rofo/Rofn",
+    "Source Code Escrow",
+    "Termination For Convenience",
+    "Third Party Beneficiary",
+    "Uncapped Liability",
+    "Unlimited/All-You-Can-Eat-License",
+    "Volume Restriction",
+    "Warranty Duration"
+  ],
+  "background_label": "__background__",
+  "accept_margin": 0.0,
+  "per_category_train_spans": {
+    "Affiliate License-Licensee": 73,
+    "Affiliate License-Licensor": 37,
+    "Anti-Assignment": 240,
+    "Audit Rights": 240,
+    "Cap On Liability": 240,
+    "Change Of Control": 156,
+    "Competitive Restriction Exception": 77,
+    "Covenant Not To Sue": 106,
+    "Exclusivity": 240,
+    "Expiration Date": 240,
+    "Insurance": 240,
+    "Ip Ownership Assignment": 224,
+    "Irrevocable Or Perpetual License": 115,
+    "Joint Ip Ownership": 90,
+    "License Grant": 240,
+    "Liquidated Damages": 77,
+    "Minimum Commitment": 240,
+    "Most Favored Nation": 28,
+    "No-Solicit Of Customers": 33,
+    "No-Solicit Of Employees": 61,
+    "Non-Compete": 171,
+    "Non-Disparagement": 44,
+    "Non-Transferable License": 190,
+    "Notice Period To Terminate Renewal": 84,
+    "Post-Termination Services": 240,
+    "Price Restrictions": 22,
+    "Renewal Term": 137,
+    "Revenue/Profit Sharing": 240,
+    "Rofr/Rofo/Rofn": 240,
+    "Source Code Escrow": 57,
+    "Termination For Convenience": 167,
+    "Third Party Beneficiary": 28,
+    "Uncapped Liability": 120,
+    "Unlimited/All-You-Can-Eat-License": 20,
+    "Volume Restriction": 120,
+    "Warranty Duration": 142
+  },
+  "splits": {
+    "train": 347,
+    "val": 79,
+    "test": 84
+  },
+  "val": {
+    "top1": 0.5808709175738724,
+    "n": 1286,
+    "f1": 0.9266409266409266
+  },
+  "test": {
+    "top1": 0.570625,
+    "n": 1600,
+    "precision": 0.9207800121876905,
+    "recall": 0.944375,
+    "f1": 0.9324282628818266
+  },
+  "threshold_curve": [
+    {
+      "threshold": -0.02,
+      "precision": 0.8152380952380952,
+      "recall": 0.9984447900466563,
+      "f1": 0.8975882558545962
+    },
+    {
+      "threshold": -0.015,
+      "precision": 0.8292367399741267,
+      "recall": 0.9968895800933126,
+      "f1": 0.9053672316384181
+    },
+    {
+      "threshold": -0.01,
+      "precision": 0.8516042780748663,
+      "recall": 0.9906687402799378,
+      "f1": 0.9158878504672898
+    },
+    {
+      "threshold": -0.005,
+      "precision": 0.8820621468926554,
+      "recall": 0.9712286158631416,
+      "f1": 0.924500370096225
+    },
+    {
+      "threshold": 0.0,
+      "precision": 0.9202453987730062,
+      "recall": 0.9331259720062208,
+      "f1": 0.9266409266409266
+    },
+    {
+      "threshold": 0.005,
+      "precision": 0.9547826086956521,
+      "recall": 0.8538102643856921,
+      "f1": 0.9014778325123153
+    },
+    {
+      "threshold": 0.01,
+      "precision": 0.9694189602446484,
+      "recall": 0.73950233281493,
+      "f1": 0.838994265549184
+    },
+    {
+      "threshold": 0.015,
+      "precision": 0.980719794344473,
+      "recall": 0.5933125972006221,
+      "f1": 0.7393410852713178
+    },
+    {
+      "threshold": 0.02,
+      "precision": 0.9834983498349835,
+      "recall": 0.463452566096423,
+      "f1": 0.6300211416490485
+    },
+    {
+      "threshold": 0.025,
+      "precision": 0.9830508474576272,
+      "recall": 0.3608087091757387,
+      "f1": 0.5278725824800911
+    },
+    {
+      "threshold": 0.03,
+      "precision": 0.9860335195530726,
+      "recall": 0.2744945567651633,
+      "f1": 0.42944038929440387
+    },
+    {
+      "threshold": 0.035,
+      "precision": 0.9962962962962963,
+      "recall": 0.20917573872472783,
+      "f1": 0.3457583547557841
+    },
+    {
+      "threshold": 0.04,
+      "precision": 1.0,
+      "recall": 0.17107309486780714,
+      "f1": 0.2921646746347941
+    },
+    {
+      "threshold": 0.045,
+      "precision": 1.0,
+      "recall": 0.1368584758942457,
+      "f1": 0.24076607387140903
+    },
+    {
+      "threshold": 0.05,
+      "precision": 1.0,
+      "recall": 0.08942457231726283,
+      "f1": 0.16416845110635261
+    },
+    {
+      "threshold": 0.055,
+      "precision": 1.0,
+      "recall": 0.06220839813374806,
+      "f1": 0.11713030746705712
+    },
+    {
+      "threshold": 0.06,
+      "precision": 1.0,
+      "recall": 0.038880248833592534,
+      "f1": 0.0748502994011976
+    },
+    {
+      "threshold": 0.065,
+      "precision": 1.0,
+      "recall": 0.025660964230171075,
+      "f1": 0.05003790750568613
+    },
+    {
+      "threshold": 0.07,
+      "precision": 1.0,
+      "recall": 0.013996889580093312,
+      "f1": 0.027607361963190184
+    },
+    {
+      "threshold": 0.075,
+      "precision": 1.0,
+      "recall": 0.01010886469673406,
+      "f1": 0.020015396458814474
+    },
+    {
+      "threshold": 0.08,
+      "precision": 1.0,
+      "recall": 0.0038880248833592537,
+      "f1": 0.0077459333849728895
+    },
+    {
+      "threshold": 0.085,
+      "precision": 1.0,
+      "recall": 0.0015552099533437014,
+      "f1": 0.003105590062111801
+    },
+    {
+      "threshold": 0.09,
+      "precision": 1.0,
+      "recall": 0.0007776049766718507,
+      "f1": 0.001554001554001554
+    },
+    {
+      "threshold": 0.095,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    {
+      "threshold": 0.1,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    {
+      "threshold": 0.105,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    {
+      "threshold": 0.11,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    {
+      "threshold": 0.115,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    {
+      "threshold": 0.12,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    }
+  ],
+  "built_with_seed": 17
+}
