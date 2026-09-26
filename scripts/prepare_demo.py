@@ -12,7 +12,7 @@ import argparse
 import logging
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -65,7 +65,7 @@ def main() -> int:
             on_progress=lambda stage, pct: print(f"\r  {stage}: {pct:.0%}", end="", flush=True),
         )
         print()
-        label = f"contractnli-{datetime.now(timezone.utc):%Y%m%d-%H%M%S}"
+        label = f"contractnli-{datetime.now(UTC):%Y%m%d-%H%M%S}"
         for arm in arms:
             db.add(AblationResult(
                 run_label=label, arm=arm.arm, dataset=meta["dataset"],

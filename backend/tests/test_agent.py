@@ -18,7 +18,8 @@ from app.pipeline.verify import VerificationResult
 
 def _rec(**kw) -> ObligationRecord:
     base = {"obligation_type": "deadline", "title": "t", "claim": "c",
-            "severity": "low", "due_date": date(2030, 1, 1)}
+            "claim_variants": ["c"], "severity": "low",
+            "due_date": date(2030, 1, 1)}
     base.update(kw)
     return ObligationRecord(**base)
 

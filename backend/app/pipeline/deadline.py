@@ -178,6 +178,11 @@ class ObligationRecord:
     obligation_type: str
     title: str
     claim: str
+    #: Every phrasing of this category's assertion, specialised with the facts
+    #: found in the clause. Disjunctive categories ("audit or inspect") are
+    #: split into separate limbs because an NLI model will not entail a
+    #: disjunction; the verifier scores each and the best-entailed one wins.
+    claim_variants: list[str]
     severity: str
     obligor: str | None = None
     obligee: str | None = None
@@ -347,17 +352,25 @@ def _humanise_days(days: int) -> str:
     return f"{days} days"
 
 
-def build_claim(cat: Category, text: str, obligor: str | None,
+def build_claims(cat: Category, text: str, obligor: str | None,
+                 durations: list[TemporalFact], money: tuple[float, str] | None,
+                 recurrence: str | None, abs_dates: list[TemporalFact]) -> list[str]:
+    """Specialise every phrasing of the category with the clause's own facts."""
+    return [
+        _specialise(cat, variant, text, obligor, durations, money, recurrence, abs_dates)
+        for variant in cat.claim_variants
+    ]
+
+
+def _specialise(cat: Category, base: str, text: str, obligor: str | None,
                 durations: list[TemporalFact], money: tuple[float, str] | None,
                 recurrence: str | None, abs_dates: list[TemporalFact]) -> str:
-    """Specialise the category template with what was actually found in the clause."""
-    base = cat.claim_template
+    """Specialise one template with what was actually found in the clause."""
     subject = obligor if obligor else None
 
     # Substitute the obligor into templates that start with a generic actor.
     if subject:
         base = re.sub(r"^A party\b", subject, base)
-        base = re.sub(r"^This agreement expires", "This agreement expires", base)
 
     extra: list[str] = []
     primary = pick_duration(durations, text, cat.obligation_type, cat.name)
@@ -431,13 +444,14 @@ def to_obligation(
         basis = (f"relative period '{primary.raw}' ({_humanise_days(primary.days)}); "
                  "no effective date on the contract to anchor it")
 
-    claim = build_claim(cat, text, obligor, durations, money, recurrence, abs_dates)
+    variants = build_claims(cat, text, obligor, durations, money, recurrence, abs_dates)
     title = cat.name if not obligor else f"{cat.name} — {obligor}"
 
     return ObligationRecord(
         obligation_type=cat.obligation_type,
         title=title[:500],
-        claim=claim,
+        claim=variants[0],
+        claim_variants=variants,
         severity=_severity_bump(cat, primary.days if primary else None,
                                 money[0] if money else None),
         obligor=obligor,

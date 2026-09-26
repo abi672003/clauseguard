@@ -173,8 +173,27 @@ def analyze_contract(
         if verify_on and proposals:
             emit("verify", f"Verifying {len(proposals)} claims against their source clauses",
                  0.66, {"n": len(proposals)})
-            results = verify([(c.text, r.claim) for c, r in proposals])
-            verifications = list(results)
+            # Disjunctive categories carry several phrasings. Score them all and
+            # keep the best-entailed limb, which is what "A or B" actually means
+            # and also records which limb fired.
+            flat: list[tuple[str, str]] = []
+            owner: list[int] = []
+            for idx, (clause_row, rec) in enumerate(proposals):
+                for variant in rec.claim_variants or [rec.claim]:
+                    flat.append((clause_row.text, variant))
+                    owner.append(idx)
+            scored = verify(flat)
+
+            best: list[object | None] = [None] * len(proposals)
+            for own, res in zip(owner, scored, strict=True):
+                current = best[own]
+                if current is None or res.entailment > current.entailment:
+                    best[own] = res
+            for (_clause_row, rec), res in zip(proposals, best, strict=True):
+                if res is not None:
+                    rec.claim = res.hypothesis   # the limb that actually verified
+            results = [r for r in best if r is not None]
+            verifications = list(best)
             counts["grounded"] = sum(1 for v in results if v.verdict == "grounded")
             counts["uncertain"] = sum(1 for v in results if v.verdict == "uncertain")
             counts["ungrounded"] = sum(1 for v in results if v.verdict == "ungrounded")

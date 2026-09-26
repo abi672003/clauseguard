@@ -40,6 +40,28 @@ verifier would rubber-stamp it. ClauseGuard specialises each claim with what it
 actually found — *"The required notice period is 90 days"* — which makes the
 claim falsifiable, and gives stage 5 something real to catch.
 
+**Claims must also be minimal.** This was learned the hard way and it shapes the
+whole taxonomy. Against a clause reading *"Either party may terminate this
+Agreement for convenience upon sixty (60) days prior written notice"*:
+
+| hypothesis | entailment |
+|---|---|
+| "A party may terminate this agreement for convenience." | **0.998** |
+| "A party may terminate this agreement for convenience, **without cause**." | **0.011** |
+
+The clause never says "without cause", so the verifier refuses the claim — and
+it is *right to*. The same happens with disjunctions: "may audit **or inspect**
+the records" scores 0.013 where "may audit the records" scores 0.989, because
+an NLI model will not entail "A or B" from a clause stating only A.
+
+So every claim template is a single, minimal, unqualified assertion, and
+genuinely disjunctive categories (*right of first refusal / offer /
+negotiation*) list each limb separately. The verifier scores every limb and the
+best-entailed one wins, which is what the disjunction actually means — and it
+records *which* limb fired, which is more useful to a reviewer anyway. Two tests
+(`test_no_claim_template_contains_a_disjunction`,
+`test_no_claim_template_carries_unsupported_filler`) hold this invariant.
+
 ### Division of authority
 
 The **verifier** is the authority on evidence: does the clause entail the claim?
@@ -231,6 +253,12 @@ output defensible rather than merely plausible.
 - Scanned PDFs with no text layer are rejected; there is no OCR stage.
 - Prototype extraction is strong at recognising clause *categories* and
   deliberately conservative about what it accepts as an obligation candidate.
+- Because the CUAD corpus is historical (1999–2019), a seeded demo shows due
+  dates in the past. Upload a current contract to see the forward calendar.
+- The verifier rejects a high share of proposals on real contracts. That is
+  mostly the verifier catching genuine extraction errors — a misclassified
+  table header will not entail a licence claim — but it also means end-to-end
+  recall is bounded by extractor precision, not by the verifier.
 
 ## Licence
 
