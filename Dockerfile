@@ -36,15 +36,16 @@ RUN pip install --no-cache-dir torch==2.5.1 \
 COPY backend/requirements.txt /app/backend/requirements.txt
 RUN pip install --no-cache-dir -r /app/backend/requirements.txt
 
-COPY backend/ /app/backend/
-COPY scripts/ /app/scripts/
-COPY docs/ /app/docs/
-
-# Bake the datasets (CUAD for the demo corpus, ContractNLI for calibration and
-# the ablation) and both frozen checkpoints into the image.
+# Datasets and checkpoints come first and depend only on these two scripts, so
+# editing application code does not invalidate a 1.1GB download layer.
+COPY scripts/download_data.py scripts/download_models.py /app/scripts/
 RUN python /app/scripts/download_data.py && \
     rm -f /app/data/raw/contract_nli/contract-nli.zip && \
     python /app/scripts/download_models.py
+
+COPY backend/ /app/backend/
+COPY scripts/ /app/scripts/
+COPY docs/ /app/docs/
 
 # Prototype bank + calibration are committed artefacts; rebuild only if absent.
 RUN test -f /app/backend/artifacts/prototypes.npz || \
