@@ -1,0 +1,40 @@
+# Netlify hosts the ClauseGuard frontend only.
+#
+# The backend cannot run here: it needs ~1.6GB resident for the two transformer
+# checkpoints, a persistent filesystem for SQLite and ChromaDB, WebSockets for
+# the live pipeline stream, and minutes-long request handling. Netlify Functions
+# cap at 1024MB and 26s. So the API runs elsewhere and this site points at it
+# via VITE_API_BASE.
+
+[build]
+  base    = "frontend"
+  command = "npm run build"
+  # Relative to `base`, NOT to the repo root - "frontend/dist" here would
+  # resolve to frontend/frontend/dist and fail the deploy.
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+  # Set the real value in the Netlify UI:
+  #   Site settings -> Environment variables -> VITE_API_BASE
+  # e.g. https://clauseguard-api.example.com/api/v1
+  # Without it the client calls a same-origin /api/v1, which Netlify cannot serve.
+  VITE_API_BASE = "/api/v1"
+
+# Single-page app: every route falls through to index.html so deep links work.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options        = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy        = "strict-origin-when-cross-origin"
