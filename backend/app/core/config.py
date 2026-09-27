@@ -3,10 +3,10 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 ROOT_DIR = BACKEND_DIR.parent
@@ -22,7 +22,12 @@ class Settings(BaseSettings):
     version: str = "1.0.0"
     env: Literal["dev", "prod", "test"] = "dev"
     api_prefix: str = "/api/v1"
-    cors_origins: list[str] = Field(
+    # NoDecode is required, not stylistic. pydantic-settings JSON-decodes any
+    # complex-typed field in EnvSettingsSource *before* validators run, so a
+    # plain comma-separated CLAUSEGUARD_CORS_ORIGINS raises SettingsError at
+    # import time and the process never starts. NoDecode hands the raw string
+    # to the validator below instead.
+    cors_origins: Annotated[list[str], NoDecode] = Field(
         default_factory=lambda: [
             "http://localhost:5173",
             "http://localhost:4173",
@@ -89,8 +94,17 @@ class Settings(BaseSettings):
     @field_validator("cors_origins", mode="before")
     @classmethod
     def _split_origins(cls, v: object) -> object:
+        """Accept both a comma-separated string and a JSON array."""
         if isinstance(v, str):
-            return [o.strip() for o in v.split(",") if o.strip()]
+            raw = v.strip()
+            if raw.startswith("["):
+                import json
+
+                try:
+                    return json.loads(raw)
+                except json.JSONDecodeError:
+                    pass
+            return [o.strip() for o in raw.split(",") if o.strip()]
         return v
 
     @property
