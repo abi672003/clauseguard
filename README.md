@@ -175,17 +175,45 @@ or `POST /api/v1/analytics/ablation/run`.
 
 ## Running it
 
-### Docker — one command, everything included
+### The normal way — no container needed
+
+`uvicorn` serves the JSON API *and* the built React client on one port, so the
+whole product runs from one process.
 
 ```bash
-docker compose up --build
+./scripts/bootstrap.sh          # venv, datasets, checkpoints, fitted artefacts
+cd backend && ../.venv/bin/uvicorn app.main:app --port 7860
 # → http://localhost:7860
 ```
 
-The image bakes in both datasets and both checkpoints, so a running container
-makes no Hugging Face network call and starts deterministically.
+Add a public HTTPS URL with one more command:
 
-### Local development
+```bash
+./scripts/serve_public.sh       # starts the server + a Cloudflare tunnel
+```
+
+### Docker — for deploying to a host
+
+A `Dockerfile` and `docker-compose.yml` are included because most hosting
+platforms build from them, and the image bakes in both datasets and both
+checkpoints so a running container makes no Hugging Face network call.
+
+```bash
+docker compose up --build       # → http://localhost:7860
+```
+
+It is **not** required for development. The image is ~3.8GB and Docker
+Desktop's VM disk grows well past that, so on a laptop short of space, run
+natively and let the hosting platform build the image remotely.
+
+### Hot reload while developing
+
+```bash
+cd backend && ../.venv/bin/uvicorn app.main:app --reload --port 8000
+cd frontend && npm run dev                       # → http://localhost:5173, proxies /api
+```
+
+`bootstrap.sh` does the one-off setup, or run the steps yourself:
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r backend/requirements-dev.txt
@@ -193,9 +221,7 @@ python3 -m venv .venv && .venv/bin/pip install -r backend/requirements-dev.txt
 .venv/bin/python scripts/download_models.py      # both frozen checkpoints
 .venv/bin/python scripts/build_prototypes.py     # fit the extractor (no training)
 .venv/bin/python scripts/calibrate.py            # fit the verifier threshold
-
-cd backend && ../.venv/bin/uvicorn app.main:app --reload --port 8000
-cd frontend && npm install && npm run dev        # → http://localhost:5173
+cd frontend && npm install
 ```
 
 ### The agent

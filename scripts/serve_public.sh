@@ -1,24 +1,33 @@
 #!/usr/bin/env bash
-# Bring ClauseGuard up and expose it on a public HTTPS URL.
+# Run ClauseGuard and expose it on a public HTTPS URL. No Docker required.
 #
 #   ./scripts/serve_public.sh
 #
-# Starts the container (API + built UI on one port) and opens a Cloudflare quick
-# tunnel to it. No Cloudflare account, no card, no router config - cloudflared
-# dials out, so it works from behind NAT.
+# uvicorn serves the JSON API *and* the built React client on one port, so a
+# single tunnel exposes the whole product. cloudflared dials outbound, so this
+# works from behind NAT with no account, card or router configuration.
 #
-# The URL is live only while this script runs and your machine is awake, and a
+# The URL lives only while this script runs and the machine is awake, and a
 # quick tunnel gets a new random hostname each time. For a permanent address you
-# need a host that is always on - see docs/DEPLOY.md.
+# need an always-on host - see docs/DEPLOY.md.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PORT="${PORT:-7860}"
+VENV="$ROOT/.venv"
 cd "$ROOT"
 
-command -v docker >/dev/null || { echo "Docker is not installed." >&2; exit 1; }
-docker info >/dev/null 2>&1 || {
-  echo "The Docker daemon is not running. Start Docker Desktop and retry." >&2
+[[ -x "$VENV/bin/uvicorn" ]] || {
+  echo "No virtualenv at $VENV. Run ./scripts/bootstrap.sh first." >&2
+  exit 1
+}
+[[ -f "$ROOT/frontend/dist/index.html" ]] || {
+  echo "The frontend is not built. Run:  cd frontend && npm run build" >&2
+  exit 1
+}
+[[ -f "$ROOT/backend/artifacts/prototypes.npz" ]] || {
+  echo "The extractor prototype bank is missing. Run:" >&2
+  echo "  $VENV/bin/python scripts/build_prototypes.py" >&2
   exit 1
 }
 command -v cloudflared >/dev/null || {
@@ -26,31 +35,43 @@ command -v cloudflared >/dev/null || {
   exit 1
 }
 
-echo "==> starting ClauseGuard"
-docker compose up -d
+if lsof -nP -iTCP:"$PORT" -sTCP:LISTEN -t >/dev/null 2>&1; then
+  echo "Port $PORT is already in use. Set PORT=xxxx to use another." >&2
+  exit 1
+fi
 
-printf "==> waiting for the API to report healthy"
+echo "==> starting ClauseGuard (native, no container)"
+cd "$ROOT/backend"
+HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 TOKENIZERS_PARALLELISM=false \
+ANONYMIZED_TELEMETRY=False \
+  "$VENV/bin/uvicorn" app.main:app --host 127.0.0.1 --port "$PORT" \
+  >"$ROOT/clauseguard-server.log" 2>&1 &
+SERVER_PID=$!
+cd "$ROOT"
+
+LOG="$(mktemp)"
+cleanup() {
+  kill "${TUNNEL_PID:-0}" 2>/dev/null || true
+  kill "$SERVER_PID" 2>/dev/null || true
+  rm -f "$LOG"
+}
+trap cleanup EXIT
+
+printf "==> waiting for the API"
 for _ in $(seq 1 90); do
-  if curl -fsS "http://127.0.0.1:${PORT}/api/v1/health" >/dev/null 2>&1; then
-    echo " ok"
-    break
-  fi
+  curl -fsS "http://127.0.0.1:${PORT}/api/v1/health" >/dev/null 2>&1 && { echo " ok"; break; }
+  kill -0 "$SERVER_PID" 2>/dev/null || {
+    echo; echo "The server exited. Last lines:" >&2
+    tail -20 "$ROOT/clauseguard-server.log" >&2
+    exit 1
+  }
   printf "."
   sleep 2
 done
 
-if ! curl -fsS "http://127.0.0.1:${PORT}/api/v1/health" >/dev/null 2>&1; then
-  echo
-  echo "The API never came up. Logs:" >&2
-  docker compose logs --tail 40 >&2
-  exit 1
-fi
-
-LOG="$(mktemp)"
 echo "==> opening the public tunnel"
 cloudflared tunnel --url "http://localhost:${PORT}" --no-autoupdate >"$LOG" 2>&1 &
 TUNNEL_PID=$!
-trap 'kill "$TUNNEL_PID" 2>/dev/null || true; rm -f "$LOG"' EXIT
 
 URL=""
 for _ in $(seq 1 45); do
@@ -58,12 +79,7 @@ for _ in $(seq 1 45); do
   [[ -n "$URL" ]] && break
   sleep 2
 done
-
-if [[ -z "$URL" ]]; then
-  echo "Could not obtain a tunnel URL. cloudflared said:" >&2
-  tail -20 "$LOG" >&2
-  exit 1
-fi
+[[ -n "$URL" ]] || { echo "No tunnel URL. cloudflared said:" >&2; tail -20 "$LOG" >&2; exit 1; }
 
 cat <<EOF
 
@@ -74,12 +90,12 @@ cat <<EOF
   Local:  http://localhost:${PORT}
   Health: $URL/api/v1/health
   API:    $URL/api/docs
+  Logs:   $ROOT/clauseguard-server.log
 
-  The database persists in a Docker volume between restarts. If it is empty,
-  open Contracts and click "Load real CUAD contracts".
+  If the database is empty, open Contracts and click
+  "Load real CUAD contracts".
 
-  Press Ctrl-C to close the tunnel. The container keeps running; stop it with
-  'docker compose down'.
+  Ctrl-C stops both the tunnel and the server.
 
 EOF
 
